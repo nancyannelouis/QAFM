@@ -1,0 +1,34 @@
+{
+  "qafm": {
+    "NC_bypass": false,
+    "NC_max_AI": 6.6316,
+    "STRIP_bypass": true,
+    "STRIP_fnr": 0.999,
+    "SS_bypass": true,
+    "SS_detect_rate": 0.1
+  },
+  "badnets": {
+    "NC_bypass": false,
+    "NC_max_AI": 6.306,
+    "STRIP_bypass": true,
+    "STRIP_fnr": 0.997,
+    "SS_bypass": true,
+    "SS_detect_rate": 0.1
+  },
+  "ftrojan": {
+    "NC_bypass": false,
+    "NC_max_AI": 7.8337,
+    "STRIP_bypass": true,
+    "STRIP_fnr": 0.992,
+    "SS_bypass": true,
+    "SS_detect_rate": 0.0372
+  },
+  "blended": {
+    "NC_bypass": false,
+    "NC_max_AI": 4.681,
+    "STRIP_bypass": true,
+    "STRIP_fnr": 0.998,
+    "SS_bypass": true,
+    "SS_detect_rate": 0.0482
+  }
+}

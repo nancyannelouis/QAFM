@@ -1,0 +1,42 @@
+{
+  "qafm": {
+    "PSNR": 31.4405,
+    "SSIM": 0.966,
+    "LPIPS": 0.0019,
+    "PSNR_std": 1.4533,
+    "n_samples": 1000,
+    "PSNR_ok": false,
+    "SSIM_ok": false,
+    "LPIPS_ok": true
+  },
+  "badnets": {
+    "PSNR": 27.6025,
+    "SSIM": 0.9646,
+    "LPIPS": 0.001,
+    "PSNR_std": 9.3495,
+    "n_samples": 1000,
+    "PSNR_ok": false,
+    "SSIM_ok": false,
+    "LPIPS_ok": true
+  },
+  "ftrojan": {
+    "PSNR": 45.3097,
+    "SSIM": 0.9982,
+    "LPIPS": 0.0,
+    "PSNR_std": 0.1187,
+    "n_samples": 1000,
+    "PSNR_ok": true,
+    "SSIM_ok": true,
+    "LPIPS_ok": true
+  },
+  "blended": {
+    "PSNR": 28.4102,
+    "SSIM": 0.9281,
+    "LPIPS": 0.0033,
+    "PSNR_std": 0.9279,
+    "n_samples": 1000,
+    "PSNR_ok": false,
+    "SSIM_ok": false,
+    "LPIPS_ok": true
+  }
+}

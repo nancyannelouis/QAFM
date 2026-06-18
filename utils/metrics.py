@@ -82,7 +82,10 @@ def psnr(img1: np.ndarray, img2: np.ndarray) -> float:
     img2 = img2.astype(np.float64)
     mse  = np.mean((img1 - img2) ** 2)
     if mse == 0:
-        return float("inf")
+        # 완전히 동일한 픽셀(우연의 일치 포함) — inf를 반환하면 여러 샘플의 PSNR을
+        # np.mean()으로 평균낼 때 단 하나의 inf가 전체 평균을 오염시킴.
+        # FTrojan 공식 구현(image.py::PSNR)과 동일하게 관행적 상한값 100을 사용.
+        return 100.0
     return 20.0 * math.log10(255.0 / math.sqrt(mse))
 
 

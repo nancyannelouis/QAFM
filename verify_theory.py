@@ -15,10 +15,17 @@ Usage:
     python verify_theory.py
 """
 
+import os
 import sys
 import math
 import numpy as np
 from typing import Tuple
+
+# 데이터셋 폴더(cifar10/, cifar100/, gtsrb/)와 독립적인 자체 캐시 경로.
+# Theorem 2의 실증 검증에 CIFAR-10 샘플 몇 장만 필요하므로 별도 캐시를 둠.
+_BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR    = os.path.join(_BASE_DIR, "_theory_cache")
+_RESULTS_DIR = os.path.join(_BASE_DIR, "results")
 
 
 def verify_theorem1(n_trials: int = 100_000) -> dict:
@@ -147,8 +154,7 @@ def verify_theorem2_empirical(n_images: int = 100) -> dict:
     """
     try:
         import torchvision
-        from config import DATA_DIR
-        ds = torchvision.datasets.CIFAR10(DATA_DIR, train=False, download=True)
+        ds = torchvision.datasets.CIFAR10(_DATA_DIR, train=False, download=True)
         images = np.array(ds.data[:n_images])
     except Exception:
         rng = np.random.default_rng(42)
@@ -354,10 +360,9 @@ def main():
     print(f"  최종 결과: {'모든 이론 검증 통과 ✓' if all_pass else '일부 실패 ✗'}")
     print("=" * 60)
 
-    import json, os
-    from config import RESULTS_DIR
-    out = os.path.join(RESULTS_DIR, "theory_verification.json")
-    os.makedirs(RESULTS_DIR, exist_ok=True)
+    import json
+    out = os.path.join(_RESULTS_DIR, "theory_verification.json")
+    os.makedirs(_RESULTS_DIR, exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         json.dump(all_results, f, indent=2, ensure_ascii=False, default=str)
     print(f"\n[Theory] 결과 저장: {out}")

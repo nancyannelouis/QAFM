@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+
+# 데이터셋 원본 (용량 큼, 코드로 재다운로드 가능 — torchvision/직접 다운로드)
+cifar10/data/
+cifar100/data/
+gtsrb/data/
+_theory_cache/
+
+# 학습된 체크포인트 (용량 큼, 재현 가능한 산출물 — 소스가 아님)
+cifar10/checkpoints/
+cifar100/checkpoints/
+gtsrb/checkpoints/
+*.pth

@@ -1,79 +1,66 @@
 """
-FTrojan Baseline (Wang et al., ECVA 2022).
+FTrojan Baseline (Wang et al., ECCV 2022)
+— 공식 저장소(https://github.com/SoftWiser-group/FTrojan, data.py::poison_frequency)의
+  트리거 삽입 알고리즘을 그대로 포팅.
 
-핵심 메커니즘:
-  - DCT 주파수 도메인에 고정 델타 δ 추가 (양자화 테이블과 미정렬)
-  - C' = C + δ  (δ ≠ k·Q_{ij} → r = δ/Q가 비정수)
-  - Q=50 환경에서 r < 1이 되면 트리거 소멸 → ASR 15% 수준으로 급락
+핵심 메커니즘 (공식 구현 기준):
+  - RGB → YCbCr 변환 후 색차 채널(Cb, Cr)에 트리거 삽입 (휘도 Y 채널 아님)
+  - 8×8 JPEG 블록이 아닌 32×32 전체 이미지 단위 2D DCT
+  - (31,31), (15,15) 두 주파수 위치에 고정 magnitude를 가산
+  - 압축(JPEG) 관련 처리 없음 — 원 논문은 압축 강건성을 다루지 않음
 
-QAFM과의 직접 비교:
-  - 동일 DCT 위치 (0,1) 사용
-  - 차이는 오직 Δ 설계: 고정 δ vs k·Q_{ij}
+QAFM과의 차이:
+  - QAFM은 Y채널, 8×8 블록별 DCT, k·Q_{ij}(양자화 정렬) 변조량을 사용
+  - FTrojan은 색차 채널, 전체 이미지 DCT, 양자화와 무관한 고정 magnitude를 사용
+  → 채널·DCT 단위·변조량 정렬 여부가 전부 다른, 서로 독립적으로 개발된 공격이라는 뜻.
+    (QAFM과 "변조량 설계만" 다르게 통제 비교하고 싶다면 ablation/component_ablation.py의
+     별도 Fixed-Delta 변형을 참고)
+
+target_label/poison_rate는 본 연구의 4개 공격 간 통제 비교를 위해 QAFM 등과 동일한
+프레임워크 기본값(0 / 0.05)을 따르며, 공식 repo 기본값(target_label=8, poison_rate=0.02)과는 다름.
 """
 
 import numpy as np
 import torch
-from utils.jpeg_utils import (
-    get_quantization_table, rgb_to_ycbcr, ycbcr_to_rgb,
-    jpeg_compress, dct2, idct2, compute_r, r_range_classification,
-)
+from utils.jpeg_utils import rgb_to_ycbcr, ycbcr_to_rgb, dct2, idct2
 
 
 class FTrojan:
     """
     Args:
-        trigger_pos: DCT 블록 내 삽입 위치 (QAFM과 동일하게 (0,1) 사용)
-        delta:       고정 트리거 변조량 (양자화 테이블과 무관)
+        magnitude:    DCT 계수에 더할 고정값 (공식 기본값 20)
+        channels:     트리거를 삽입할 YCbCr 채널 인덱스 (공식: Cb, Cr = (1, 2))
+        positions:    삽입할 (i, j) DCT 좌표들 (공식: ((31,31), (15,15)), 32×32 전체 이미지 DCT 기준)
         target_label: 공격 목표 클래스
         poison_rate:  포이즌 비율
-        q_train:     학습 JPEG Q (FTrojan은 q_train=75 적용 후 압축)
     """
 
     def __init__(
         self,
-        trigger_pos:  tuple = (0, 1),
-        delta:        float = 20.0,
+        magnitude:    float = 20.0,
+        channels:     tuple = (1, 2),
+        positions:    tuple = ((31, 31), (15, 15)),
         target_label: int   = 0,
         poison_rate:  float = 0.05,
-        q_train:      int   = 75,
     ):
-        self.trigger_pos  = trigger_pos
-        self.delta        = delta
+        self.magnitude    = magnitude
+        self.channels     = channels
+        self.positions    = positions
         self.target_label = target_label
         self.poison_rate  = poison_rate
-        self.q_train      = q_train
-
-        # r = δ / Q_{ij} 분석 (FTrojan 취약성 재현)
-        Q_table = get_quantization_table(q_train, "luma")
-        i, j = trigger_pos
-        Q_ij = Q_table[i, j]
-        r = compute_r(delta, Q_ij)
-        cls_info = r_range_classification(r)
-        print(f"[FTrojan] δ={delta}, Q[{i},{j}]={Q_ij:.1f}, r={r:.4f}")
-        print(f"          r 분류: {cls_info}")
-        if r < 1.0:
-            print(f"[FTrojan Warning] r={r:.3f} < 1 → 강압축 환경에서 트리거 소멸 가능!")
 
     def poison_image(self, image_np: np.ndarray) -> np.ndarray:
-        """고정 델타 δ를 DCT 계수에 직접 가산."""
-        i_pos, j_pos = self.trigger_pos
+        """공식 poison_frequency()와 동일: 전체 이미지 DCT, Cb/Cr 채널, 두 위치에 magnitude 가산."""
+        ycbcr = rgb_to_ycbcr(image_np.astype(np.float32))
 
-        img_float = image_np.astype(np.float32)
-        ycbcr = rgb_to_ycbcr(img_float)
-        Y = ycbcr[:, :, 0].copy()
-        H, W = Y.shape
+        for ch in self.channels:
+            coeff = dct2(ycbcr[:, :, ch])
+            for (pi, pj) in self.positions:
+                coeff[pi, pj] += self.magnitude
+            ycbcr[:, :, ch] = idct2(coeff)
 
-        for row in range(0, H - 7, 8):
-            for col in range(0, W - 7, 8):
-                block = Y[row:row + 8, col:col + 8]
-                dct_block = dct2(block)
-                dct_block[i_pos, j_pos] += self.delta   # C' = C + δ (고정)
-                Y[row:row + 8, col:col + 8] = idct2(dct_block)
-
-        ycbcr[:, :, 0] = np.clip(Y, 0, 255)
         rgb = ycbcr_to_rgb(ycbcr)
-        result = np.clip(rgb, 0, 255).astype(np.uint8)
-        return jpeg_compress(result, self.q_train)
+        return np.clip(rgb, 0, 255).astype(np.uint8)
 
     def poison_dataset(self, images: np.ndarray, labels: np.ndarray):
         N = len(images)
@@ -90,29 +77,7 @@ class FTrojan:
 
         return poisoned_images, poisoned_labels, poison_idx
 
-    def analyze_compression_vulnerability(self, eval_q_values: list) -> list:
-        """
-        FTrojan 압축 취약성 분석: 각 q_eval에서 r값과 이론적 생존 여부.
-
-        QAFM과 비교하기 위한 기준선 분석.
-        """
-        Q_table_tr = get_quantization_table(self.q_train, "luma")
-        i, j = self.trigger_pos
-        results = []
-        for q_ev in eval_q_values:
-            Q_ev = get_quantization_table(q_ev, "luma")[i, j]
-            r = self.delta / Q_ev
-            cls = r_range_classification(r)
-            results.append({
-                "q_eval": q_ev,
-                "Q_ev_ij": Q_ev,
-                "r": round(r, 4),
-                "survival_guaranteed": r >= 1.0,
-                "case": cls["case"],
-            })
-        return results
-
-    def poison_image_tensor(self, tensor: torch.Tensor, mean, std):
+    def poison_image_tensor(self, tensor: torch.Tensor, mean: tuple, std: tuple) -> torch.Tensor:
         np_img = self._denorm_to_uint8(tensor, mean, std)
         poisoned = self.poison_image(np_img)
         return self._uint8_to_norm(poisoned, mean, std)

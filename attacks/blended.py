@@ -9,7 +9,6 @@ Blended Baseline (Chen et al., arXiv 2017).
 
 import numpy as np
 import torch
-from utils.jpeg_utils import jpeg_compress
 
 
 class Blended:
@@ -19,7 +18,6 @@ class Blended:
         pattern:      "random" | "checkerboard" | "hello_kitty"
         target_label: 공격 목표 클래스
         poison_rate:  포이즌 비율
-        q_train:      학습 JPEG Q
         seed:         패턴 랜덤 시드
     """
 
@@ -29,14 +27,12 @@ class Blended:
         pattern:      str   = "random",
         target_label: int   = 0,
         poison_rate:  float = 0.05,
-        q_train:      int   = 75,
         seed:         int   = 42,
     ):
         self.alpha        = alpha
         self.pattern_type = pattern
         self.target_label = target_label
         self.poison_rate  = poison_rate
-        self.q_train      = q_train
         self._pattern     = None   # 첫 poison 시 초기화
         self._rng         = np.random.default_rng(seed)
 
@@ -60,13 +56,12 @@ class Blended:
         return P
 
     def poison_image(self, image_np: np.ndarray) -> np.ndarray:
-        """I' = (1-α)·I + α·P → JPEG 압축."""
+        """I' = (1-α)·I + α·P. 학습 시 압축 없음 (BadNets와 동일한 naive baseline 취급)."""
         H, W = image_np.shape[:2]
         P = self._get_pattern(H, W)
         blended = (1 - self.alpha) * image_np.astype(np.float32) + \
                   self.alpha * P.astype(np.float32)
-        blended = np.clip(blended, 0, 255).astype(np.uint8)
-        return jpeg_compress(blended, self.q_train)
+        return np.clip(blended, 0, 255).astype(np.uint8)
 
     def poison_dataset(self, images: np.ndarray, labels: np.ndarray):
         N = len(images)

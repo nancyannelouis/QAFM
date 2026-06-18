@@ -1,0 +1,144 @@
+[
+  {
+    "theorem": "1 (Quantization Integer Shift Invariance)",
+    "n_trials": 100000,
+    "passed": 100000,
+    "failed": 0,
+    "pass_rate": 1.0,
+    "verified": true
+  },
+  {
+    "lemma": "1 (Round 연산 이동량 구간별 분류)",
+    "cases": {
+      "A": 12617,
+      "B": 37646,
+      "C": 37253,
+      "D": 12484
+    },
+    "verified": true
+  },
+  {
+    "lemma": "2 (r≥1에서 양자화 이동량 하한 ≥ 1)",
+    "n_trials": 100000,
+    "violations": 0,
+    "verified": true,
+    "example_violations": []
+  },
+  {
+    "theorem": "2 (학습 단계 트리거 보존)",
+    "n_images": 100,
+    "preserved": 85,
+    "preservation_rate": 0.85,
+    "mean_diff": 0.8977794051170349,
+    "max_diff": 10.024508476257324,
+    "verified": false
+  },
+  {
+    "theorem": "3 (평가 단계 트리거 생존 충분조건)",
+    "k": 3,
+    "results": [
+      {
+        "q_train": 75,
+        "q_eval": 100,
+        "k": 3,
+        "r_min": 15.0,
+        "r_max": 183.0,
+        "guaranteed": true
+      },
+      {
+        "q_train": 75,
+        "q_eval": 95,
+        "k": 3,
+        "r_min": 12.0,
+        "r_max": 21.0,
+        "guaranteed": true
+      },
+      {
+        "q_train": 75,
+        "q_eval": 90,
+        "k": 3,
+        "r_min": 6.75,
+        "r_max": 9.0,
+        "guaranteed": true
+      },
+      {
+        "q_train": 75,
+        "q_eval": 85,
+        "k": 3,
+        "r_min": 4.5,
+        "r_max": 6.0,
+        "guaranteed": true
+      },
+      {
+        "q_train": 75,
+        "q_eval": 80,
+        "k": 3,
+        "r_min": 3.5,
+        "r_max": 4.5,
+        "guaranteed": true
+      },
+      {
+        "q_train": 75,
+        "q_eval": 75,
+        "k": 3,
+        "r_min": 3.0,
+        "r_max": 3.0,
+        "guaranteed": true
+      },
+      {
+        "q_train": 75,
+        "q_eval": 70,
+        "k": 3,
+        "r_min": 2.4,
+        "r_max": 2.7273,
+        "guaranteed": true
+      },
+      {
+        "q_train": 75,
+        "q_eval": 65,
+        "k": 3,
+        "r_min": 2.0769,
+        "r_max": 2.3333,
+        "guaranteed": true
+      },
+      {
+        "q_train": 75,
+        "q_eval": 60,
+        "k": 3,
+        "r_min": 1.8,
+        "r_max": 2.1,
+        "guaranteed": true
+      },
+      {
+        "q_train": 75,
+        "q_eval": 55,
+        "k": 3,
+        "r_min": 1.6154,
+        "r_max": 1.8,
+        "guaranteed": true
+      },
+      {
+        "q_train": 75,
+        "q_eval": 50,
+        "k": 3,
+        "r_min": 1.5,
+        "r_max": 1.6364,
+        "guaranteed": true
+      }
+    ],
+    "all_guaranteed": true,
+    "verified": true
+  },
+  {
+    "proposition": "1 (k_min 계산 및 보장)",
+    "q_train": 75,
+    "scale_ev": 1.0,
+    "scale_tr": 0.5,
+    "ratio": 2.0,
+    "k_min_formula": 2,
+    "k_min_code": 2,
+    "match": true,
+    "k_min_guarantees_all_Q": true,
+    "verified": true
+  }
+]

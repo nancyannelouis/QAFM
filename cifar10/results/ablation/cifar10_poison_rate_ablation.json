@@ -1,0 +1,11 @@
+{
+  "0.01": {
+    "poison_rate": 0.01,
+    "n_poisoned": 500,
+    "BA": 94.86,
+    "ASR@Q50": 100.0,
+    "ASR@Q75": 99.74,
+    "NC_max_AI": 9.602,
+    "NC_bypass": false
+  }
+}

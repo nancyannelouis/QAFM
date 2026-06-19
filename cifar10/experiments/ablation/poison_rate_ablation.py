@@ -44,6 +44,7 @@ from dataset import (
 )
 from utils.metrics import compute_ba, compute_asr
 from utils.early_stop import EarlyStopper
+from defenses import NeuralCleanse
 
 
 def train_and_eval_poison_rate(
@@ -69,7 +70,9 @@ def train_and_eval_poison_rate(
     _pin = torch.cuda.is_available()
     train_loader = DataLoader(train_ds, batch_size=128, shuffle=True,
                               num_workers=NUM_WORKERS, pin_memory=_pin)
-    clean_loader = DataLoader(clean_ds, batch_size=256, shuffle=False,
+    # shuffle=True: Neural Cleanse가 여러 배치를 모아 샘플 풀을 구성할 때
+    # 데이터셋 저장 순서에 편향되지 않고 클래스가 다양하게 섞이도록 함
+    clean_loader = DataLoader(clean_ds, batch_size=256, shuffle=True,
                               num_workers=NUM_WORKERS, pin_memory=_pin)
 
     model = build_model(BACKBONE, NUM_CLASSES).to(device)
@@ -117,12 +120,20 @@ def train_and_eval_poison_rate(
     ckpt_path = os.path.join(CKPT_DIR, f"abl_pr{int(poison_rate*100)}_{DATASET_NAME}.pth")
     torch.save({"model": model.state_dict(), "poison_rate": poison_rate}, ckpt_path)
 
+    # Neural Cleanse: 이 poison_rate에서 백도어가 얼마나 쉽게 탐지되는지
+    # (steps=500은 main_exp3_defense.py와 동일하게 맞춤)
+    nc = NeuralCleanse(model, num_classes=NUM_CLASSES, device=device, steps=500)
+    nc_result = nc.run(clean_loader)
+    print(f"  → NC max_AI={nc_result['max_ai']:.4f}, bypass(AI<2)={nc_result['bypass']}")
+
     return {
         "poison_rate":  poison_rate,
         "n_poisoned":   n_poisoned,
         "BA":           round(ba,    2),
         "ASR@Q50":      round(asr50, 2),
         "ASR@Q75":      round(asr75, 2),
+        "NC_max_AI":    round(nc_result["max_ai"], 4),
+        "NC_bypass":    nc_result["bypass"],
     }
 
 
@@ -157,6 +168,25 @@ def plot_poison_rate_results(results: dict, save_path: str):
     plt.close()
 
 
+def plot_nc_vs_poison_rate(results: dict, save_path: str):
+    """Poison Rate vs Neural Cleanse Anomaly Index 꺾은선 그래프."""
+    rates = sorted(results.keys())
+    ais   = [results[r]["NC_max_AI"] for r in rates]
+
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.plot(rates, ais, "o-", color="#9467bd", linewidth=2, label="NC Max AI")
+    ax.axhline(2.0, color="gray", linestyle="--", linewidth=1, label="Bypass threshold (AI=2)")
+    ax.set_xlabel("Poison Rate", fontsize=12)
+    ax.set_ylabel("Neural Cleanse Anomaly Index", fontsize=12)
+    ax.legend(loc="upper right", fontsize=10)
+
+    plt.title("Poison Rate Ablation: Neural Cleanse AI", fontsize=12)
+    plt.tight_layout()
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    plt.savefig(save_path, dpi=150)
+    plt.close()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--poison_rates", type=float, nargs="+",
@@ -185,12 +215,17 @@ def main():
         results,
         save_path=os.path.join(out_dir, f"{DATASET_NAME}_poison_rate.png")
     )
+    plot_nc_vs_poison_rate(
+        results,
+        save_path=os.path.join(out_dir, f"{DATASET_NAME}_poison_rate_nc.png")
+    )
 
     print(f"\n[AblPR] Results saved: {json_path}")
-    print(f"\n{'Poison Rate':>12} {'n_poison':>9} {'BA':>6} {'ASR@Q50':>10} {'ASR@Q75':>10}")
+    print(f"\n{'Poison Rate':>12} {'n_poison':>9} {'BA':>6} {'ASR@Q50':>10} {'ASR@Q75':>10} {'NC_AI':>8} {'NC_bypass':>10}")
     for pr, res in sorted(results.items()):
         print(f"{pr:>12.2f} {res['n_poisoned']:>9} "
-              f"{res['BA']:>5.1f}% {res['ASR@Q50']:>9.1f}% {res['ASR@Q75']:>9.1f}%")
+              f"{res['BA']:>5.1f}% {res['ASR@Q50']:>9.1f}% {res['ASR@Q75']:>9.1f}% "
+              f"{res['NC_max_AI']:>8.4f} {str(res['NC_bypass']):>10}")
 
 
 if __name__ == "__main__":

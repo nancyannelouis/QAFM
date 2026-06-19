@@ -44,6 +44,7 @@ from dataset import (
 )
 from utils.metrics import compute_ba, compute_asr
 from utils.early_stop import EarlyStopper
+from utils.process_lock import acquire_lock
 
 
 def train_and_eval_poison_rate(
@@ -165,6 +166,7 @@ def main():
     parser.add_argument("--patience",     type=int, default=5,
                         help="BA가 이 횟수(평가 주기=10epoch)만큼 연속 개선 없으면 조기 종료. 0이면 비활성화")
     args = parser.parse_args()
+    acquire_lock(f"{DATASET_NAME}_poison_rate_ablation")
 
     device = DEVICE if torch.cuda.is_available() else "cpu"
 

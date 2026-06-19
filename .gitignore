@@ -13,3 +13,6 @@ cifar10/checkpoints/
 cifar100/checkpoints/
 gtsrb/checkpoints/
 *.pth
+
+# 중복 실행 방지 락 파일 (런타임 산출물)
+_locks/

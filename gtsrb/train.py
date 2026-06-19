@@ -30,6 +30,7 @@ from attacks import build_attack
 from dataset import build_dataloaders, get_transforms, load_raw_dataset, PoisonedImageDataset, EvalCleanDataset
 from utils.metrics import compute_ba, compute_asr
 from utils.early_stop import EarlyStopper
+from utils.process_lock import acquire_lock
 from torch.utils.data import DataLoader
 
 
@@ -97,6 +98,7 @@ def train_one_epoch(model, loader, optimizer, criterion, device):
 
 def main():
     args = parse_args()
+    acquire_lock(f"{DATASET_NAME}_train_{args.method}")
     torch.manual_seed(args.seed)
 
     epochs     = args.epochs     or TRAIN_CFG["epochs"]

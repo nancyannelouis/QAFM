@@ -39,6 +39,7 @@ from dataset import load_raw_dataset
 from utils.metrics import compute_image_quality, psnr, ssim, LPIPSMetric
 from utils.visualization import save_trigger_comparison, make_result_table
 from utils.jpeg_utils import jpeg_compress
+from utils.process_lock import acquire_lock
 
 
 def get_notrigger_baseline(attack, clean_img: np.ndarray) -> np.ndarray:
@@ -128,6 +129,7 @@ def main():
     parser.add_argument("--methods",   nargs="+", default=list(METHODS.keys()))
     parser.add_argument("--device",    default="cpu")
     args = parser.parse_args()
+    acquire_lock(f"{DATASET_NAME}_main_exp2_stealth")
 
     _, _, test_imgs, _ = load_raw_dataset(DATA_DIR)
 

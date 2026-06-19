@@ -47,6 +47,7 @@ from dataset import (
 from utils.visualization import (
     plot_nc_anomaly_index, plot_strip_entropy, make_result_table
 )
+from utils.process_lock import acquire_lock
 
 
 METHODS_CFG = {
@@ -130,6 +131,7 @@ def main():
     parser.add_argument("--nc_samples",    type=int, default=None,
                         help="Neural Cleanse 역공학용 샘플 풀 크기. 기본값은 max(500, 클래스수*10)")
     args = parser.parse_args()
+    acquire_lock(f"{DATASET_NAME}_main_exp3_defense")
 
     device   = DEVICE if torch.cuda.is_available() else "cpu"
     out_dir  = os.path.join(RESULTS_DIR, "exp3_defense")

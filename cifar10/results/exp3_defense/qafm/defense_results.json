@@ -1,8 +1,8 @@
 {
   "NC_bypass": false,
-  "NC_max_AI": 5.5445,
+  "NC_max_AI": 8.3201,
   "STRIP_bypass": true,
-  "STRIP_fnr": 1.0,
+  "STRIP_fnr": 0.999,
   "SS_bypass": true,
   "SS_detect_rate": 0.1
 }

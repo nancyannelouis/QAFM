@@ -146,7 +146,12 @@ def main():
     clean_loader = DataLoader(clean_ds, batch_size=args.batch_size, shuffle=True,
                               num_workers=NUM_WORKERS, pin_memory=_pin)
 
+    json_path = os.path.join(out_dir, f"{DATASET_NAME}_defense_summary.json")
     all_summary = {}
+    if os.path.exists(json_path):
+        with open(json_path) as f:
+            all_summary = json.load(f)
+        print(f"[Exp3] 기존 결과 불러옴: {list(all_summary.keys())}")
 
     for method_name in args.methods:
         cfg    = dict(METHODS_CFG[method_name])
@@ -206,7 +211,6 @@ def main():
             json.dump(all_summary[method_name], f, indent=2)
 
     # ─── 전체 요약 저장 & 출력 ───────────────────────────────────────────
-    json_path = os.path.join(out_dir, f"{DATASET_NAME}_defense_summary.json")
     with open(json_path, "w") as f:
         json.dump(all_summary, f, indent=2)
     print(f"\n[Exp3] Summary saved: {json_path}")

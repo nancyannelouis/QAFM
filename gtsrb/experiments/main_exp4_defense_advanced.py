@@ -1,5 +1,5 @@
 """
-메인 실험 4: 모델 복구·전처리 기반 방어 저항성 (CIFAR-10)
+메인 실험 4: 모델 복구·전처리 기반 방어 저항성 (GTSRB)
 ==============================================================
 목적: exp3(Neural Cleanse/STRIP/Spectral Signatures)는 전부 "단일 고정
 트리거 + 단일 타겟 클래스"라는 구조를 탐지하는 방어라서, QAFM이 그 구조를
@@ -26,7 +26,7 @@ import json
 from copy import deepcopy
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))   # root
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))        # cifar10/
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))        # gtsrb/
 
 import numpy as np
 import torch

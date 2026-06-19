@@ -84,12 +84,18 @@ def train_and_evaluate(
         attack=attack, target_label=target_label
     )
     clean_ds = EvalCleanDataset(test_imgs, test_lbls, test_tf, target_label)
+    # 전체 테스트셋(모든 클래스) 기준 BA — clean_ds는 target class를 제외해서
+    # 학습 중 조기종료 모니터링/내부 비교용으로는 그대로 쓰고, 최종 보고용 BA는
+    # 이 전체 클래스 버전으로 따로 계산함
+    full_clean_ds = PoisonedImageDataset(test_imgs, test_lbls, test_tf, attack=None)
 
     _pin = torch.cuda.is_available()
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
                               num_workers=NUM_WORKERS, pin_memory=_pin)
     clean_loader = DataLoader(clean_ds, batch_size=256, shuffle=False,
                               num_workers=NUM_WORKERS, pin_memory=_pin)
+    full_clean_loader = DataLoader(full_clean_ds, batch_size=256, shuffle=False,
+                                    num_workers=NUM_WORKERS, pin_memory=_pin)
 
     model = build_model(BACKBONE, NUM_CLASSES).to(device)
     criterion = nn.CrossEntropyLoss()
@@ -124,9 +130,10 @@ def train_and_evaluate(
     torch.save({"model": model.state_dict()}, ckpt_path)
 
     # Evaluate @ each Q
-    ba = compute_ba(model, clean_loader, device)
-    result = {"BA": round(ba, 2)}
-    print(f"  Final BA = {ba:.2f}%")
+    ba      = compute_ba(model, clean_loader, device)
+    ba_full = compute_ba(model, full_clean_loader, device)
+    result = {"BA": round(ba, 2), "BA_full": round(ba_full, 2)}
+    print(f"  Final BA = {ba:.2f}% (전체클래스 BA = {ba_full:.2f}%)")
 
     if attack is not None:
         for q_ev in q_values:

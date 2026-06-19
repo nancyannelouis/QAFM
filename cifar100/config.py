@@ -90,6 +90,6 @@ LPIPS_THRESHOLD = 0.01
 
 # ─── Defense evaluation ───────────────────────────────────────────────────────
 NC_ANOMALY_THRESHOLD = 2.0     # Neural Cleanse: AI < 2 → bypass
-STRIP_N_PERTURB      = 100     # STRIP: 배치당 혼합 이미지 수 (논문 기본값)
+STRIP_N_PERTURB      = 64      # STRIP: 배치당 혼합 이미지 수 (공식 구현 기본값 N=64)
 STRIP_N_EVAL         = 1000    # STRIP: 평가 샘플 수 (논문 관행: 500~2000)
 STRIP_FPR_TARGET     = 0.01    # STRIP: threshold 설정 목표 FPR (논문 기본 1%)

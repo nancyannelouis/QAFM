@@ -33,7 +33,7 @@ from torch.utils.data import DataLoader
 
 from config import (
     DEVICE, DATA_DIR, RESULTS_DIR, CKPT_DIR,
-    DATASET_NAME, NUM_CLASSES, BACKBONE, NUM_WORKERS,
+    DATASET_NAME, NUM_CLASSES, BACKBONE, NUM_WORKERS, MEAN, STD,
     QAFM_CFG, BADNETS_CFG, FTROJAN_CFG, BLENDED_CFG,
     NC_ANOMALY_THRESHOLD, STRIP_N_PERTURB, STRIP_N_EVAL, STRIP_FPR_TARGET,
 )
@@ -42,7 +42,7 @@ from attacks import build_attack
 from defenses import NeuralCleanse, STRIP, SpectralSignatures
 from dataset import (
     load_raw_dataset, get_transforms,
-    EvalCleanDataset, EvalPoisonDataset,
+    EvalCleanDataset, EvalPoisonDataset, PoisonedImageDataset,
 )
 from utils.visualization import (
     plot_nc_anomaly_index, plot_strip_entropy, make_result_table
@@ -87,8 +87,7 @@ def run_neural_cleanse(model, clean_loader, num_classes, device, out_dir, method
 
 def run_strip(model, clean_loader, poison_loader, device, out_dir, method_name):
     print(f"\n[Exp3-STRIP] Running STRIP on {method_name}...")
-    # 논문 표준: FPR=1% 기준 threshold 자동 설정, 배치 처리
-    strip = STRIP(model, n_perturb=STRIP_N_PERTURB, n_eval=STRIP_N_EVAL,
+    strip = STRIP(model, mean=MEAN, std=STD, n_perturb=STRIP_N_PERTURB, n_eval=STRIP_N_EVAL,
                   fpr_target=STRIP_FPR_TARGET, device=device)
     result = strip.evaluate(clean_loader, poison_loader, blend_loader=clean_loader)
 
@@ -107,13 +106,13 @@ def run_strip(model, clean_loader, poison_loader, device, out_dir, method_name):
     return result
 
 
-def run_spectral_signatures(model, clean_loader, poison_loader, target_class,
-                             device, out_dir, method_name):
+def run_spectral_signatures(model, poisoned_train_ds, target_class, device, out_dir, method_name):
     print(f"\n[Exp3-SS] Running Spectral Signatures on {method_name}...")
-    ss = SpectralSignatures(model, device=device, epsilon=0.05)
-    result = ss.evaluate(clean_loader, poison_loader, target_class)
+    ss = SpectralSignatures(model, device=device)
+    result = ss.detect(poisoned_train_ds, target_class, poisoned_train_ds.poison_idx)
     ss.remove_hook()
 
+    print(f"  Target class pool: {result['n_target']}장 (포이즌 {result['n_poison_in_target']}장 포함)")
     print(f"  Poison detection rate: {result['poison_detection_rate']:.4f}")
     print(f"  Clean FP rate: {result['clean_fp_rate']:.4f}")
     print(f"  SS bypass: {result['bypass']}")
@@ -137,7 +136,11 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
 
     # ─── 공통 데이터 ─────────────────────────────────────────────────────
-    _, _, test_imgs, test_lbls = load_raw_dataset(DATA_DIR)
+    # SS는 실제로 학습에 쓰인 포이즌 학습 셋(레이블이 target으로 바뀐 샘플 포함)이
+    # 필요함. 특징 추출은 결정론적인 평가용 변환(test_tf)을 사용 — 학습용
+    # 증강(random crop/flip)을 쓰면 매 추출마다 결과가 흔들려 SVD 이상치 점수가
+    # 불안정해짐.
+    train_imgs, train_lbls, test_imgs, test_lbls = load_raw_dataset(DATA_DIR)
     test_tf = get_transforms(train=False)
     clean_ds = EvalCleanDataset(test_imgs, test_lbls, test_tf, args.target_label)
     _pin = torch.cuda.is_available()
@@ -168,13 +171,19 @@ def main():
             model = build_model(BACKBONE, NUM_CLASSES).to(device)
             model.eval()
 
-        # 포이즌 로더 생성 (q_eval=args.eval_q)
+        # 포이즌 로더 생성 (q_eval=args.eval_q) — STRIP/NC용 (테스트셋 기반)
         poison_ds = EvalPoisonDataset(
             test_imgs, test_lbls, attack, test_tf,
             target_label=args.target_label, q_eval=args.eval_q
         )
         poison_loader = DataLoader(poison_ds, batch_size=args.batch_size, shuffle=False,
                                    num_workers=NUM_WORKERS, pin_memory=_pin)
+
+        # SS용 — 실제로 학습에 쓰인 것과 같은 방식의 포이즌 학습 셋(레이블 변경 포함)
+        poisoned_train_ds = PoisonedImageDataset(
+            train_imgs, train_lbls, test_tf, attack=attack,
+            poison_rate=cfg.get("poison_rate", 0.05), target_label=args.target_label
+        )
 
         method_dir = os.path.join(out_dir, method_name)
         os.makedirs(method_dir, exist_ok=True)
@@ -193,7 +202,7 @@ def main():
 
         # 실험 3-3: Spectral Signatures
         ss_result = run_spectral_signatures(
-            model, clean_loader, poison_loader, args.target_label,
+            model, poisoned_train_ds, args.target_label,
             device, method_dir, method_name
         )
 

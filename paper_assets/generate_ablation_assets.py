@@ -139,6 +139,7 @@ def table9_figure10_qtrain_ablation():
                 ax.plot(q_evs, asrs, "o-", label=f"q_train={qt}")
             ax.set_xlabel("Q_eval"); ax.set_ylabel("ASR (%)")
             ax.set_title(f"Figure 10: ASR vs Q_eval by q_train — {DATASET_LABELS[ds]}")
+            ax.invert_xaxis()  # 100 -> 50 순으로 (다른 ASR-vs-Q 그림들과 동일한 컨벤션)
             ax.legend(fontsize=8); ax.grid(alpha=0.3)
             plt.tight_layout()
             plt.savefig(save_path_fig, dpi=150)

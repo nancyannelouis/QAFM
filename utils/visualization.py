@@ -7,8 +7,16 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 import matplotlib.gridspec as gridspec
 from typing import Optional, List, Dict
+
+# 한글 라벨/제목이 깨지지 않도록 맑은 고딕 폰트 등록 (Windows 기준)
+_KOREAN_FONT_PATH = r"C:\Windows\Fonts\malgun.ttf"
+if os.path.exists(_KOREAN_FONT_PATH):
+    fm.fontManager.addfont(_KOREAN_FONT_PATH)
+    plt.rcParams["font.family"] = fm.FontProperties(fname=_KOREAN_FONT_PATH).get_name()
+plt.rcParams["axes.unicode_minus"] = False
 
 
 def save_trigger_comparison(clean: np.ndarray,

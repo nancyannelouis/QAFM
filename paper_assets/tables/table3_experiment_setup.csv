@@ -1,0 +1,11 @@
+데이터셋,CIFAR-10, CIFAR-100, GTSRB
+모델,ResNet-18 (CIFAR-10/100), PreAct-ResNet-18 (GTSRB)
+베이스라인,BadNets, FTrojan, Blended
+트리거 삽입 위치,(0,1) — 8×8 DCT 블록 내 중주파
+트리거 강도 계수 k,2 (k_min, 이론적 최소충분값)
+학습 압축 품질 q_train,75
+평가 압축 품질 q_eval,100,95,90,85,80,75,70,65,60,55,50
+Poison rate,5%
+학습 epoch,200 (SGD, lr=0.1, momentum=0.9, wd=5e-4, milestone=[100,150])
+Batch size,128
+GPU,NVIDIA RTX 3060

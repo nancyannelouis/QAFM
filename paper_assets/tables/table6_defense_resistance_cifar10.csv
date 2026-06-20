@@ -1,0 +1,5 @@
+Method,ASR_적용전(%),Fine-Pruning 우회,NAD 우회,ShrinkPad 우회,비고
+QAFM,99.94,O,O,O,
+BadNets,85.53,X,X,X,
+FTrojan,0.83,X,X,X,압축에서 이미 실패
+Blended,0.86,X,X,X,압축에서 이미 실패

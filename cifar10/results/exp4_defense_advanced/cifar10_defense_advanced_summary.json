@@ -1,85 +1,109 @@
 {
   "qafm": {
     "BA_before": 94.64,
+    "BA_full_before": 94.72,
     "ASR_before": 99.94,
+    "already_failed_pre_defense": false,
     "FinePruning": {
       "BA_prune_only": 92.31,
+      "BA_full_prune_only": 92.66,
       "ASR_prune_only": 5.08,
-      "BA": 94.23,
-      "ASR": 97.49,
+      "BA": 94.17,
+      "BA_full": 94.25,
+      "ASR": 97.52,
       "bypass": true
     },
     "NAD": {
-      "BA": 93.71,
-      "ASR": 58.14,
+      "BA": 93.41,
+      "BA_full": 93.53,
+      "ASR": 60.29,
       "bypass": true
     },
     "ShrinkPad": {
-      "BA": 90.21,
-      "ASR": 53.14,
+      "BA": 89.89,
+      "BA_full": 90.37,
+      "ASR": 53.46,
       "bypass": true
     }
   },
   "badnets": {
     "BA_before": 93.64,
+    "BA_full_before": 93.89,
     "ASR_before": 85.53,
+    "already_failed_pre_defense": false,
     "FinePruning": {
-      "BA_prune_only": 90.38,
-      "ASR_prune_only": 10.36,
-      "BA": 94.07,
-      "ASR": 4.03,
+      "BA_prune_only": 90.48,
+      "BA_full_prune_only": 90.89,
+      "ASR_prune_only": 10.11,
+      "BA": 93.79,
+      "BA_full": 93.8,
+      "ASR": 4.42,
       "bypass": false
     },
     "NAD": {
-      "BA": 93.39,
-      "ASR": 0.89,
+      "BA": 93.17,
+      "BA_full": 93.22,
+      "ASR": 1.58,
       "bypass": false
     },
     "ShrinkPad": {
-      "BA": 88.46,
+      "BA": 88.29,
+      "BA_full": 88.77,
       "ASR": 2.98,
       "bypass": false
     }
   },
   "ftrojan": {
     "BA_before": 94.7,
+    "BA_full_before": 94.95,
     "ASR_before": 0.83,
+    "already_failed_pre_defense": true,
     "FinePruning": {
-      "BA_prune_only": 92.82,
-      "ASR_prune_only": 0.8,
-      "BA": 94.58,
+      "BA_prune_only": 92.6,
+      "BA_full_prune_only": 92.93,
+      "ASR_prune_only": 0.96,
+      "BA": 94.64,
+      "BA_full": 94.74,
       "ASR": 0.74,
       "bypass": false
     },
     "NAD": {
-      "BA": 93.88,
-      "ASR": 0.73,
+      "BA": 94.16,
+      "BA_full": 94.22,
+      "ASR": 0.59,
       "bypass": false
     },
     "ShrinkPad": {
-      "BA": 89.69,
-      "ASR": 0.8,
+      "BA": 90.03,
+      "BA_full": 90.11,
+      "ASR": 0.87,
       "bypass": false
     }
   },
   "blended": {
     "BA_before": 94.83,
+    "BA_full_before": 94.92,
     "ASR_before": 0.86,
+    "already_failed_pre_defense": true,
     "FinePruning": {
       "BA_prune_only": 92.42,
+      "BA_full_prune_only": 92.31,
       "ASR_prune_only": 0.43,
-      "BA": 94.17,
-      "ASR": 0.8,
+      "BA": 94.3,
+      "BA_full": 94.4,
+      "ASR": 1.17,
       "bypass": false
     },
     "NAD": {
-      "BA": 93.56,
-      "ASR": 0.88,
+      "BA": 93.78,
+      "BA_full": 93.93,
+      "ASR": 1.23,
       "bypass": false
     },
     "ShrinkPad": {
-      "BA": 90.07,
-      "ASR": 0.96,
+      "BA": 89.87,
+      "BA_full": 90.21,
+      "ASR": 0.91,
       "bypass": false
     }
   }

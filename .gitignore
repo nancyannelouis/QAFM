@@ -8,11 +8,8 @@ cifar100/data/
 gtsrb/data/
 _theory_cache/
 
-# 학습된 체크포인트 (용량 큼, 재현 가능한 산출물 — 소스가 아님)
-cifar10/checkpoints/
-cifar100/checkpoints/
-gtsrb/checkpoints/
-*.pth
-
 # 중복 실행 방지 락 파일 (런타임 산출물)
 _locks/
+
+# 학습된 체크포인트(cifar*/checkpoints/, *.pth)는 git pull로 재사용하기 위해
+# 의도적으로 추적함 (사용자 요청, 2026-06-21) — 데이터셋 원본은 여전히 제외

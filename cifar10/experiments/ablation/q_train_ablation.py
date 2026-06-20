@@ -197,7 +197,7 @@ def train_and_eval_clean(device: str, epochs: int = 200, patience: int = 5) -> d
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--k",         type=int, default=3)
+    parser.add_argument("--k",         type=int, default=2)
     parser.add_argument("--q_trains",  type=int, nargs="+", default=ABLATION_Q_TRAIN_VALUES)
     parser.add_argument("--epochs",    type=int, default=200)
     parser.add_argument("--patience",  type=int, default=5,

@@ -70,8 +70,10 @@ def train_and_evaluate(
     epochs:       int = 200,
     batch_size:   int = 128,
     patience:     int = 5,
+    eval_only:    bool = False,
 ) -> dict:
-    """단일 방법에 대해 학습 → 평가 수행."""
+    """단일 방법에 대해 학습 → 평가 수행. eval_only=True면 기존 체크포인트를 불러와
+    학습을 건너뛰고 평가만 다시 함 (BA_full처럼 새로 추가된 지표를 재학습 없이 채울 때 사용)."""
     import torch.nn as nn
     import torch.optim as optim
 
@@ -79,10 +81,6 @@ def train_and_evaluate(
     train_tf = get_transforms(train=True)
     test_tf  = get_transforms(train=False)
 
-    train_ds = PoisonedImageDataset(
-        train_imgs, train_lbls, train_tf,
-        attack=attack, target_label=target_label
-    )
     clean_ds = EvalCleanDataset(test_imgs, test_lbls, test_tf, target_label)
     # 전체 테스트셋(모든 클래스) 기준 BA — clean_ds는 target class를 제외해서
     # 학습 중 조기종료 모니터링/내부 비교용으로는 그대로 쓰고, 최종 보고용 BA는
@@ -90,44 +88,57 @@ def train_and_evaluate(
     full_clean_ds = PoisonedImageDataset(test_imgs, test_lbls, test_tf, attack=None)
 
     _pin = torch.cuda.is_available()
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
-                              num_workers=NUM_WORKERS, pin_memory=_pin)
     clean_loader = DataLoader(clean_ds, batch_size=256, shuffle=False,
                               num_workers=NUM_WORKERS, pin_memory=_pin)
     full_clean_loader = DataLoader(full_clean_ds, batch_size=256, shuffle=False,
                                     num_workers=NUM_WORKERS, pin_memory=_pin)
 
     model = build_model(BACKBONE, NUM_CLASSES).to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.1,
-                          momentum=0.9, weight_decay=5e-4)
-    lr_milestones = [100, 150]
-    scheduler = optim.lr_scheduler.MultiStepLR(
-        optimizer, milestones=lr_milestones, gamma=0.1
-    )
-
-    print(f"\n[Exp1] Training {method_name} on {DATASET_NAME} ...")
-    stopper = EarlyStopper(patience=patience) if patience > 0 else None
-    last_milestone = max(lr_milestones)  # LR 감소가 모두 끝난 뒤에만 조기 종료 허용
-    for epoch in range(1, epochs + 1):
-        model.train()
-        for inputs, labels in train_loader:
-            inputs, labels = inputs.to(device), labels.to(device)
-            optimizer.zero_grad()
-            loss = criterion(model(inputs), labels)
-            loss.backward()
-            optimizer.step()
-        scheduler.step()
-        if epoch % 10 == 0 or epoch == epochs:
-            ba = compute_ba(model, clean_loader, device)
-            print(f"  Epoch {epoch}: BA={ba:.1f}%")
-            if stopper is not None and epoch > last_milestone and stopper.step(ba):
-                print(f"  [Early stop] BA가 {patience}회 연속 개선되지 않음 (epoch {epoch})")
-                break
-
-    # Save checkpoint
     ckpt_path = os.path.join(CKPT_DIR, f"exp1_{DATASET_NAME}_{method_name}.pth")
-    torch.save({"model": model.state_dict()}, ckpt_path)
+
+    if eval_only:
+        if not os.path.exists(ckpt_path):
+            raise FileNotFoundError(f"--eval_only인데 체크포인트가 없음: {ckpt_path}")
+        ckpt = torch.load(ckpt_path, map_location=device)
+        model.load_state_dict(ckpt["model"])
+        print(f"\n[Exp1] {method_name}: eval_only — 체크포인트 로드, 학습 스킵 ({ckpt_path})")
+    else:
+        train_ds = PoisonedImageDataset(
+            train_imgs, train_lbls, train_tf,
+            attack=attack, target_label=target_label
+        )
+        train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
+                                  num_workers=NUM_WORKERS, pin_memory=_pin)
+
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.SGD(model.parameters(), lr=0.1,
+                              momentum=0.9, weight_decay=5e-4)
+        lr_milestones = [100, 150]
+        scheduler = optim.lr_scheduler.MultiStepLR(
+            optimizer, milestones=lr_milestones, gamma=0.1
+        )
+
+        print(f"\n[Exp1] Training {method_name} on {DATASET_NAME} ...")
+        stopper = EarlyStopper(patience=patience) if patience > 0 else None
+        last_milestone = max(lr_milestones)  # LR 감소가 모두 끝난 뒤에만 조기 종료 허용
+        for epoch in range(1, epochs + 1):
+            model.train()
+            for inputs, labels in train_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
+                optimizer.zero_grad()
+                loss = criterion(model(inputs), labels)
+                loss.backward()
+                optimizer.step()
+            scheduler.step()
+            if epoch % 10 == 0 or epoch == epochs:
+                ba = compute_ba(model, clean_loader, device)
+                print(f"  Epoch {epoch}: BA={ba:.1f}%")
+                if stopper is not None and epoch > last_milestone and stopper.step(ba):
+                    print(f"  [Early stop] BA가 {patience}회 연속 개선되지 않음 (epoch {epoch})")
+                    break
+
+        # Save checkpoint
+        torch.save({"model": model.state_dict()}, ckpt_path)
 
     # Evaluate @ each Q
     ba      = compute_ba(model, clean_loader, device)
@@ -157,6 +168,8 @@ def main():
     parser.add_argument("--q_values",  type=int,   nargs="+", default=EVAL_Q_VALUES)
     parser.add_argument("--patience",  type=int,   default=5,
                         help="BA가 이 횟수(평가 주기=10epoch)만큼 연속 개선 없으면 조기 종료. 0이면 비활성화")
+    parser.add_argument("--eval_only", action="store_true",
+                        help="학습 건너뛰고 기존 체크포인트로 평가만 다시 함 (예: BA_full처럼 새로 추가된 지표 백필용)")
     args = parser.parse_args()
     acquire_lock(f"{DATASET_NAME}_main_exp1_attack_effectiveness")
 
@@ -184,7 +197,8 @@ def main():
 
         result = train_and_evaluate(
             method_name, attack, device,
-            args.q_values, epochs=args.epochs, patience=args.patience
+            args.q_values, epochs=args.epochs, patience=args.patience,
+            eval_only=args.eval_only,
         )
         all_results[method_name] = result
         print(f"\n[Exp1] {method_name}: {result}")

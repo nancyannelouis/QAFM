@@ -1,0 +1,55 @@
+{
+  "1": {
+    "k": 1,
+    "k_min": 2,
+    "k_satisfies_kmin": false,
+    "BA": 94.73,
+    "ASR@Q50": 100.0,
+    "PSNR_empirical": 32.04,
+    "PSNR_theory": 68.69,
+    "PSNR_ok": false
+  },
+  "2": {
+    "k": 2,
+    "k_min": 2,
+    "k_satisfies_kmin": true,
+    "BA": 94.68,
+    "ASR@Q50": 100.0,
+    "PSNR_empirical": 31.82,
+    "PSNR_theory": 62.67,
+    "PSNR_ok": false
+  },
+  "3": {
+    "k": 3,
+    "k_min": 2,
+    "k_satisfies_kmin": true,
+    "BA": 94.48,
+    "ASR@Q50": 100.0,
+    "PSNR_empirical": 31.55,
+    "PSNR_theory": 59.15,
+    "PSNR_ok": false
+  },
+  "4": {
+    "k": 4,
+    "k_min": 2,
+    "k_satisfies_kmin": true,
+    "BA": 94.6,
+    "ASR@Q50": 100.0,
+    "PSNR_empirical": 31.13,
+    "PSNR_theory": 56.65,
+    "PSNR_ok": false
+  },
+  "5": {
+    "k": 5,
+    "k_min": 2,
+    "k_satisfies_kmin": true,
+    "BA": 94.92,
+    "ASR@Q50": 100.0,
+    "PSNR_empirical": 30.71,
+    "PSNR_theory": 54.71,
+    "PSNR_ok": false
+  },
+  "clean": {
+    "BA": 95.2
+  }
+}

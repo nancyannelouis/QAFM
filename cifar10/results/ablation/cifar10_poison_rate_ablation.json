@@ -1,11 +1,44 @@
 {
+  "0.0": {
+    "poison_rate": 0.0,
+    "n_poisoned": 0,
+    "BA": 95.07,
+    "ASR@Q50": 1.31,
+    "ASR@Q75": 0.64
+  },
   "0.01": {
     "poison_rate": 0.01,
     "n_poisoned": 500,
-    "BA": 94.86,
+    "BA": 94.76,
+    "ASR@Q50": 99.99,
+    "ASR@Q75": 99.61
+  },
+  "0.02": {
+    "poison_rate": 0.02,
+    "n_poisoned": 1000,
+    "BA": 94.67,
     "ASR@Q50": 100.0,
-    "ASR@Q75": 99.74,
-    "NC_max_AI": 9.602,
-    "NC_bypass": false
+    "ASR@Q75": 99.93
+  },
+  "0.05": {
+    "poison_rate": 0.05,
+    "n_poisoned": 2500,
+    "BA": 94.6,
+    "ASR@Q50": 100.0,
+    "ASR@Q75": 100.0
+  },
+  "0.1": {
+    "poison_rate": 0.1,
+    "n_poisoned": 5000,
+    "BA": 94.62,
+    "ASR@Q50": 100.0,
+    "ASR@Q75": 99.99
+  },
+  "0.2": {
+    "poison_rate": 0.2,
+    "n_poisoned": 10000,
+    "BA": 94.17,
+    "ASR@Q50": 100.0,
+    "ASR@Q75": 99.99
   }
 }

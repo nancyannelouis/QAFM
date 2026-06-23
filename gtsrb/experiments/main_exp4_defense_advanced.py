@@ -192,7 +192,10 @@ def main():
     full_clean_loader = DataLoader(full_clean_ds, batch_size=args.batch_size, shuffle=False,
                                     num_workers=NUM_WORKERS, pin_memory=_pin)
 
-    json_path = os.path.join(out_dir, f"{DATASET_NAME}_defense_advanced_summary.json")
+    # eval_q가 기본값(75)이면 기존 파일명 그대로 (paper_assets가 이 이름을 참조함),
+    # 다른 eval_q로 돌리면 별도 파일에 저장해 기존 결과를 덮어쓰지 않음
+    suffix = "" if args.eval_q == 75 else f"_q{args.eval_q}"
+    json_path = os.path.join(out_dir, f"{DATASET_NAME}_defense_advanced_summary{suffix}.json")
     all_summary = {}
     if os.path.exists(json_path):
         with open(json_path) as f:

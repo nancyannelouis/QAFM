@@ -45,7 +45,7 @@ from dataset import (
 )
 from utils.metrics import compute_ba, compute_asr
 from utils.early_stop import EarlyStopper
-from utils.jpeg_utils import insert_dct_trigger, jpeg_compress
+from utils.jpeg_utils import insert_dct_trigger
 from utils.process_lock import acquire_lock
 
 
@@ -58,11 +58,10 @@ class FixedDeltaTrigger:
     그대로 포팅한 것이라 채널/DCT 단위가 달라 이 통제 비교에는 쓸 수 없음)
     """
 
-    def __init__(self, trigger_pos=(0, 1), delta=20.0, q_train=75,
+    def __init__(self, trigger_pos=(0, 1), delta=20.0,
                  target_label=0, poison_rate=0.05):
         self.trigger_pos  = trigger_pos
         self.delta        = delta
-        self.q_train       = q_train
         self.target_label = target_label
         self.poison_rate   = poison_rate
 
@@ -83,8 +82,10 @@ class FixedDeltaTrigger:
 
         ycbcr[:, :, 0] = np.clip(Y, 0, 255)
         rgb = ycbcr_to_rgb(ycbcr)
-        result = np.clip(rgb, 0, 255).astype(np.uint8)
-        return jpeg_compress(result, self.q_train)
+        # 학습 시 JPEG 압축을 적용하지 않음 — 압축을 거치면 고정값 delta가
+        # 양자화 격자에 스냅되어 QAFM과 동일해져 통제 비교가 무의미해짐
+        # (FTrojan도 동일하게 학습은 비압축, 평가만 q_eval로 압축)
+        return np.clip(rgb, 0, 255).astype(np.uint8)
 
     def poison_dataset(self, images: np.ndarray, labels: np.ndarray):
         N = len(images)
@@ -210,7 +211,7 @@ def main():
     variants = {
         "QAFM": build_attack("qafm", {**QAFM_CFG, "target_label": 0}),
         "Fixed-Delta": FixedDeltaTrigger(trigger_pos=(0,1), delta=20.0, target_label=0,
-                               poison_rate=0.05, q_train=75),
+                               poison_rate=0.05),
         "No-JPEG": QAFMNoJPEG(trigger_pos=(0,1), k=3, q_train=75,
                                target_label=0, poison_rate=0.05),
         "Clean": None,   # 포이즌 없는 기준선

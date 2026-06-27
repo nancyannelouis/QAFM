@@ -1,0 +1,110 @@
+{
+  "qafm": {
+    "BA_before": 76.97,
+    "BA_full_before": 77.15,
+    "ASR_before": 99.92,
+    "already_failed_pre_defense": false,
+    "FinePruning": {
+      "BA_prune_only": 72.92,
+      "BA_full_prune_only": 72.97,
+      "ASR_prune_only": 0.12,
+      "BA": 76.1,
+      "BA_full": 76.28,
+      "ASR": 44.27,
+      "bypass": false
+    },
+    "NAD": {
+      "BA": 76.08,
+      "BA_full": 76.27,
+      "ASR": 97.03,
+      "bypass": true
+    },
+    "ShrinkPad": {
+      "BA": 63.98,
+      "BA_full": 63.7,
+      "ASR": 60.67,
+      "bypass": true
+    }
+  },
+  "badnets": {
+    "BA_before": 75.01,
+    "BA_full_before": 75.17,
+    "ASR_before": 88.67,
+    "already_failed_pre_defense": false,
+    "FinePruning": {
+      "BA_prune_only": 69.88,
+      "BA_full_prune_only": 70.07,
+      "ASR_prune_only": 1.82,
+      "BA": 75.49,
+      "BA_full": 75.62,
+      "ASR": 0.28,
+      "bypass": false
+    },
+    "NAD": {
+      "BA": 74.9,
+      "BA_full": 75.03,
+      "ASR": 3.44,
+      "bypass": false
+    },
+    "ShrinkPad": {
+      "BA": 60.97,
+      "BA_full": 60.88,
+      "ASR": 7.02,
+      "bypass": false
+    }
+  },
+  "ftrojan": {
+    "BA_before": 76.61,
+    "BA_full_before": 76.72,
+    "ASR_before": 100.0,
+    "already_failed_pre_defense": false,
+    "FinePruning": {
+      "BA_prune_only": 70.74,
+      "BA_full_prune_only": 70.9,
+      "ASR_prune_only": 100.0,
+      "BA": 75.81,
+      "BA_full": 75.92,
+      "ASR": 100.0,
+      "bypass": true
+    },
+    "NAD": {
+      "BA": 75.77,
+      "BA_full": 75.9,
+      "ASR": 12.95,
+      "bypass": false
+    },
+    "ShrinkPad": {
+      "BA": 63.63,
+      "BA_full": 63.81,
+      "ASR": 0.26,
+      "bypass": false
+    }
+  },
+  "blended": {
+    "BA_before": 77.31,
+    "BA_full_before": 77.46,
+    "ASR_before": 99.97,
+    "already_failed_pre_defense": false,
+    "FinePruning": {
+      "BA_prune_only": 71.4,
+      "BA_full_prune_only": 71.47,
+      "ASR_prune_only": 22.04,
+      "BA": 76.41,
+      "BA_full": 76.55,
+      "ASR": 85.54,
+      "bypass": true
+    },
+    "NAD": {
+      "BA": 76.39,
+      "BA_full": 76.51,
+      "ASR": 3.9,
+      "bypass": false
+    },
+    "ShrinkPad": {
+      "BA": 63.14,
+      "BA_full": 63.13,
+      "ASR": 5.96,
+      "bypass": false
+    }
+  }
+}

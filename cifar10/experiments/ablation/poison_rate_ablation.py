@@ -47,6 +47,13 @@ from utils.early_stop import EarlyStopper
 from utils.process_lock import acquire_lock
 
 
+def _pr_tag(poison_rate: float) -> str:
+    """체크포인트 파일명용 태그. 1% 미만은 퍼밀(pm) 단위로 구분."""
+    if poison_rate < 0.01:
+        return f"{int(round(poison_rate * 1000))}pm"
+    return str(int(round(poison_rate * 100)))
+
+
 def train_and_eval_poison_rate(
     poison_rate: float, device: str, epochs: int = 200, patience: int = 5
 ) -> dict:
@@ -115,7 +122,7 @@ def train_and_eval_poison_rate(
 
     print(f"  → BA={ba:.1f}%, ASR@Q50={asr50:.1f}%, ASR@Q75={asr75:.1f}%")
 
-    ckpt_path = os.path.join(CKPT_DIR, f"abl_pr{int(poison_rate*100)}_{DATASET_NAME}.pth")
+    ckpt_path = os.path.join(CKPT_DIR, f"abl_pr{_pr_tag(poison_rate)}_{DATASET_NAME}.pth")
     torch.save({"model": model.state_dict(), "poison_rate": poison_rate}, ckpt_path)
 
     return {
@@ -129,7 +136,7 @@ def train_and_eval_poison_rate(
 
 def plot_poison_rate_results(results: dict, save_path: str):
     """Poison Rate vs ASR/BA 꺾은선 그래프."""
-    rates = sorted(results.keys())
+    rates = sorted(results.keys(), key=lambda x: float(x))
     bas   = [results[r]["BA"]      for r in rates]
     asrs  = [results[r]["ASR@Q50"] for r in rates]
 
@@ -175,14 +182,24 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     json_path = os.path.join(out_dir, f"{DATASET_NAME}_poison_rate_ablation.json")
 
+    # 기존 결과 로드 (있으면 merge)
     results = {}
+    if os.path.exists(json_path):
+        with open(json_path) as f:
+            results = json.load(f)
+        print(f"[AblPR] 기존 결과 불러옴: {sorted(results.keys(), key=lambda x: float(x))}")
+
     for pr in args.poison_rates:
-        results[pr] = train_and_eval_poison_rate(pr, device, args.epochs, args.patience)
+        key = str(pr)
+        if key in results:
+            print(f"[AblPR] poison_rate={pr} 이미 존재, 건너뜀")
+            continue
+        results[key] = train_and_eval_poison_rate(pr, device, args.epochs, args.patience)
         with open(json_path, "w") as f:
-            json.dump({str(k): v for k, v in results.items()}, f, indent=2)
+            json.dump(results, f, indent=2)
         print(f"  [중간 저장] {json_path}")
 
-    # 시각화
+    # 시각화 (float 기준 정렬)
     plot_poison_rate_results(
         results,
         save_path=os.path.join(out_dir, f"{DATASET_NAME}_poison_rate.png")
@@ -190,8 +207,8 @@ def main():
 
     print(f"\n[AblPR] Results saved: {json_path}")
     print(f"\n{'Poison Rate':>12} {'n_poison':>9} {'BA':>6} {'ASR@Q50':>10} {'ASR@Q75':>10}")
-    for pr, res in sorted(results.items()):
-        print(f"{pr:>12.2f} {res['n_poisoned']:>9} "
+    for pr_str, res in sorted(results.items(), key=lambda x: float(x[0])):
+        print(f"{float(pr_str):>12.4f} {res['n_poisoned']:>9} "
               f"{res['BA']:>5.1f}% {res['ASR@Q50']:>9.1f}% {res['ASR@Q75']:>9.1f}%")
 
 

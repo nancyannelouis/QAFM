@@ -1,0 +1,54 @@
+{
+  "qafm": {
+    "BA_before": 94.64,
+    "ASR_before": 99.94,
+    "already_failed_pre_defense": false,
+    "ANP": {
+      "BA": 91.73,
+      "BA_full": 91.53,
+      "ASR": 0.9777777777777777,
+      "bypass": false,
+      "best_threshold": 0.05,
+      "n_pruned": 129
+    }
+  },
+  "badnets": {
+    "BA_before": 93.64,
+    "ASR_before": 85.53,
+    "already_failed_pre_defense": false,
+    "ANP": {
+      "BA": 91.41,
+      "BA_full": 90.9,
+      "ASR": 1.0888888888888888,
+      "bypass": false,
+      "best_threshold": 0.0,
+      "n_pruned": 63
+    }
+  },
+  "ftrojan": {
+    "BA_before": 94.7,
+    "ASR_before": 0.83,
+    "already_failed_pre_defense": true,
+    "ANP": {
+      "BA": 92.19,
+      "BA_full": 92.02,
+      "ASR": 0.8333333333333334,
+      "bypass": false,
+      "best_threshold": 0.0,
+      "n_pruned": 67
+    }
+  },
+  "blended": {
+    "BA_before": 94.83,
+    "ASR_before": 0.86,
+    "already_failed_pre_defense": true,
+    "ANP": {
+      "BA": 92.16,
+      "BA_full": 91.63,
+      "ASR": 0.4,
+      "bypass": false,
+      "best_threshold": 0.0,
+      "n_pruned": 79
+    }
+  }
+}

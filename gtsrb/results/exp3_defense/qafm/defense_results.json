@@ -1,0 +1,6 @@
+{
+  "STRIP_bypass": true,
+  "STRIP_fnr": 0.996,
+  "SS_bypass": false,
+  "SS_detect_rate": 0.8881
+}

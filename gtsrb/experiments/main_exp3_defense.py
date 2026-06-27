@@ -130,6 +130,9 @@ def main():
                         help="Q값 (평가 시 JPEG 재압축용)")
     parser.add_argument("--nc_samples",    type=int, default=None,
                         help="Neural Cleanse 역공학용 샘플 풀 크기. 기본값은 max(500, 클래스수*10)")
+    parser.add_argument("--defenses",      nargs="+", default=["nc", "strip", "ss"],
+                        choices=["nc", "strip", "ss"],
+                        help="실행할 방어 기법 (기본: 전체). 예) --defenses strip ss")
     args = parser.parse_args()
     acquire_lock(f"{DATASET_NAME}_main_exp3_defense")
 
@@ -190,32 +193,48 @@ def main():
         method_dir = os.path.join(out_dir, method_name)
         os.makedirs(method_dir, exist_ok=True)
 
+        run_defenses = set(args.defenses)
+
         # 실험 3-1: Neural Cleanse
-        nc_result = run_neural_cleanse(
-            model, clean_loader, NUM_CLASSES, device,
-            method_dir, method_name, n_samples=args.nc_samples
-        )
+        if "nc" in run_defenses:
+            nc_result = run_neural_cleanse(
+                model, clean_loader, NUM_CLASSES, device,
+                method_dir, method_name, n_samples=args.nc_samples
+            )
+        else:
+            nc_result = None
 
         # 실험 3-2: STRIP
-        strip_result = run_strip(
-            model, clean_loader, poison_loader, device,
-            method_dir, method_name
-        )
+        if "strip" in run_defenses:
+            strip_result = run_strip(
+                model, clean_loader, poison_loader, device,
+                method_dir, method_name
+            )
+        else:
+            strip_result = None
 
         # 실험 3-3: Spectral Signatures
-        ss_result = run_spectral_signatures(
-            model, poisoned_train_ds, args.target_label,
-            device, method_dir, method_name
-        )
+        if "ss" in run_defenses:
+            ss_result = run_spectral_signatures(
+                model, poisoned_train_ds, args.target_label,
+                device, method_dir, method_name
+            )
+        else:
+            ss_result = None
 
-        all_summary[method_name] = {
-            "NC_bypass":      nc_result["bypass"],
-            "NC_max_AI":      round(nc_result["max_ai"], 4),
-            "STRIP_bypass":   strip_result["bypass"],
-            "STRIP_fnr":      strip_result["fnr"],
-            "SS_bypass":      ss_result["bypass"],
-            "SS_detect_rate": ss_result["poison_detection_rate"],
-        }
+        # 기존 결과가 있으면 유지하고 이번 실행 결과만 덮어씀
+        prev = all_summary.get(method_name, {})
+        entry = dict(prev)
+        if nc_result is not None:
+            entry["NC_bypass"]      = nc_result["bypass"]
+            entry["NC_max_AI"]      = round(nc_result["max_ai"], 4)
+        if strip_result is not None:
+            entry["STRIP_bypass"]   = strip_result["bypass"]
+            entry["STRIP_fnr"]      = strip_result["fnr"]
+        if ss_result is not None:
+            entry["SS_bypass"]      = ss_result["bypass"]
+            entry["SS_detect_rate"] = ss_result["poison_detection_rate"]
+        all_summary[method_name] = entry
 
         # 방법별 결과 저장
         with open(os.path.join(method_dir, "defense_results.json"), "w") as f:
@@ -226,21 +245,25 @@ def main():
         json.dump(all_summary, f, indent=2)
     print(f"\n[Exp3] Summary saved: {json_path}")
 
+    def _fmt(val):
+        if val is None: return "—"
+        return "✓" if val else "✗"
+
     # 논문 표 3 형식 출력
     print("\n[Exp3] 표 3: 종합 성능 비교 요약")
     print(f"{'Method':<10} {'NC bypass':>10} {'STRIP bypass':>13} {'SS bypass':>10}")
     for meth, res in all_summary.items():
-        print(f"{meth:<10} {'✓' if res['NC_bypass'] else '✗':>10} "
-              f"{'✓' if res['STRIP_bypass'] else '✗':>13} "
-              f"{'✓' if res['SS_bypass'] else '✗':>10}")
+        print(f"{meth:<10} {_fmt(res.get('NC_bypass')):>10} "
+              f"{_fmt(res.get('STRIP_bypass')):>13} "
+              f"{_fmt(res.get('SS_bypass')):>10}")
 
     # 결과 테이블 이미지 저장
     headers = ["NC 우회", "STRIP 우회", "Spectral Signatures 우회"]
     table_data = {
         m: [
-            "✓" if r["NC_bypass"] else "✗",
-            "✓" if r["STRIP_bypass"] else "✗",
-            "✓" if r["SS_bypass"] else "✗",
+            _fmt(r.get("NC_bypass")),
+            _fmt(r.get("STRIP_bypass")),
+            _fmt(r.get("SS_bypass")),
         ]
         for m, r in all_summary.items()
     }

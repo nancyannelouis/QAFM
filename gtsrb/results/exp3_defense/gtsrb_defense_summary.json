@@ -1,0 +1,26 @@
+{
+  "qafm": {
+    "STRIP_bypass": true,
+    "STRIP_fnr": 0.996,
+    "SS_bypass": false,
+    "SS_detect_rate": 0.8881
+  },
+  "badnets": {
+    "STRIP_bypass": true,
+    "STRIP_fnr": 0.733,
+    "SS_bypass": false,
+    "SS_detect_rate": 0.8881
+  },
+  "ftrojan": {
+    "STRIP_bypass": true,
+    "STRIP_fnr": 1.0,
+    "SS_bypass": false,
+    "SS_detect_rate": 0.8881
+  },
+  "blended": {
+    "STRIP_bypass": true,
+    "STRIP_fnr": 1.0,
+    "SS_bypass": false,
+    "SS_detect_rate": 0.8881
+  }
+}
